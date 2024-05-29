@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convite</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ffcccc; /* vermelho claro */
+            color: white;
+            overflow: hidden;
+            padding: 10px; /* Adiciona padding para evitar bordas coladas na tela */
+            text-align: center; /* Centraliza o conteúdo */
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px #000;
+            font-size: 24px; /* Tamanho ajustado para telas menores */
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            padding: 15px 30px; /* Reduzido o tamanho dos botões para se adequar à tela do celular */
+            font-size: 18px; /* Reduzido o tamanho das letras nos botões */
+            cursor: pointer;
+        }
+        .floating-message {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px; /* Aumentado o tamanho do padding */
+            border-radius: 5px;
+            font-size: 20px; /* Aumentado o tamanho da fonte */
+            animation: fadeout 5s forwards;
+            z-index: 1000; /* Garantir que o texto flutuante fique na frente */
+        }
+        @keyframes fadeout {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .background-text {
+            font-size: 24px; /* Aumentado o tamanho para ser mais visível */
+            color: black;
+            opacity: 0.1; /* para dar um efeito de fundo */
+            position: absolute;
+            transform: rotate(-45deg);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Oi, vamos tomar uma ?</h1>
+    <div class="buttons">
+        <button id="yesButton">Sim</button>
+        <button id="noButton">Não</button>
+    </div>
+
+    <!-- Incluindo a biblioteca canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <script>
+        const yesButton = document.getElementById('yesButton');
+        const noButton = document.getElementById('noButton');
+        const messages = [
+            "Tem certeza?",
+            "Pense melhor.",	
+            "Vai perder essa chance?",
+            "Já percebeu que só tem uma resposta?."
+        ];
+        let messageIndex = 0;
+
+        // Adicionar o texto de fundo dinamicamente
+        const backgroundTextContainer = document.createElement('div');
+        backgroundTextContainer.className = 'background-text-container';
+        document.body.appendChild(backgroundTextContainer);
+
+        function addBackgroundText() {
+            const text = 'Oi bb!';
+            const textElement = document.createElement('div');
+            textElement.className = 'background-text';
+            textElement.innerText = text;
+            return textElement;
+        }
+
+        function fillBackground() {
+            const container = document.querySelector('.background-text-container');
+            container.innerHTML = ''; // Clear existing background texts
+
+            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+            const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+            const textElement = addBackgroundText();
+            const textWidth = textElement.clientWidth || 150;
+            const textHeight = textElement.clientHeight || 50;
+
+            const cols = Math.ceil(vw / textWidth);
+            const rows = Math.ceil(vh / textHeight);
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const element = addBackgroundText();
+                    element.style.top = `${i * textHeight}px`;
+                    element.style.left = `${j * textWidth}px`;
+                    container.appendChild(element);
+                }
+            }
+        }
+
+        window.addEventListener('resize', fillBackground);
+        fillBackground();
+
+        function sendNotification(choice) {
+            // Substitua esta URL pelo endpoint do seu servidor
+            const endpoint = 'https://example.com/notify-choice';
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ choice }),
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        yesButton.addEventListener('click', () => {
+            // Animação de fogos de artifício
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            sendNotification('Sim');
+
+            setTimeout(() => {
+                alert('Chama do no direct.');
+            }, 500); // Atraso para permitir a animação de fogos antes do alerta
+        });
+
+        noButton.addEventListener('click', () => {
+            const randomX = Math.floor(Math.random() * (window.innerWidth - noButton.offsetWidth));
+            const randomY = Math.floor(Math.random() * (window.innerHeight - noButton.offsetHeight));
+            noButton.style.position = 'absolute';
+            noButton.style.left = `${randomX}px`;
+            noButton.style.top = `${randomY}px`;
+
+            sendNotification('Não');
+
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'floating-message-container';
+            document.body.appendChild(messageContainer);
+
+            const message = document.createElement('div');
+            message.className = 'floating-message';
+            message.innerText = messages[messageIndex];
+            messageContainer.appendChild(message);
+
+            messageIndex = (messageIndex + 1) % messages.length;
+
+            setTimeout(() => {
+                message.remove();
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
